@@ -11,10 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 /**
  * Created by guobiao.xu on 2018/7/2.
@@ -30,16 +27,25 @@ public class TestDownload implements CommandLineRunner {
     @Value("${minio.upload.bucket}")
     private String minioUploadBucket;
 
+    @Value("${minio.upload.subdir}")
+    private String subDir;
+
     @Override
     public void run(String... strings) throws Exception {
-        Iterable<Result<Item>> iterable = minioClient.listObjects(minioUploadBucket);
+        // 列出test-upload/audio下的文件
+        Iterable<Result<Item>> iterable = minioClient.listObjects(minioUploadBucket, subDir);
         for (Result<Item> rs : iterable) {
             Item item = rs.get();
 
             Long ts1 = System.currentTimeMillis();
-            String obj = item.objectName();
+            String obj = item.objectName(); // objectName = audio/007.wav
+
+            // check parent folder
+            File outFile = new File("out/" + obj), outParent = outFile.getParentFile();
+            if(!outParent.exists()) outParent.mkdirs();
+
             try(InputStream in = minioClient.getObject(minioUploadBucket, obj);
-                OutputStream out = new BufferedOutputStream(new FileOutputStream("out/" + obj))) {
+                OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile))) {
                 IOUtils.copy(in, out);
             }
 

@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * Created by guobiao.xu on 2018/7/2.
  */
-@Component
+//@Component
 public class TestUpload implements CommandLineRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestUpload.class);
@@ -30,6 +30,9 @@ public class TestUpload implements CommandLineRunner {
     @Value("${minio.upload.bucket}")
     private String minioUploadBucket;
 
+    @Value("${minio.upload.subdir}")
+    private String subDir;
+
     @Override
     public void run(String... strings) throws Exception {
         File[] files = new File("sample/").listFiles();
@@ -39,7 +42,8 @@ public class TestUpload implements CommandLineRunner {
             try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
                 Map<String, String> meta = new HashMap<>();
 
-                minioClient.putObject(minioUploadBucket, file.getName(), in, "audio/wav");
+                // 上传到test-upload/audio目录, 目录不需要预先创建
+                minioClient.putObject(minioUploadBucket, subDir + "/" + file.getName(), in, "audio/wav");
 
             }
 
